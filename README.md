@@ -1,5 +1,9 @@
 # 🌊 Underwater Wave Height Prediction System
 
+![Dashboard Screenshot](assets/dashboard_screenshot.png)
+
+This project utilizes a CNN-LSTM deep learning model to predict underwater wave heights using meteorological data (Wind Speed, Pressure, and Temperature) from NOAA buoys.
+
 <div align="center">
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=python)
