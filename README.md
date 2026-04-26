@@ -20,9 +20,9 @@ This project utilizes a CNN-LSTM deep learning model to predict underwater wave 
 
 ---
 
-## 📸 Screenshots
+## 📸 Graphical Representation 
 
-| Dashboard | Prediction Result |
+| Actualvs Predicted | Model Learning Curve |
 |-----------|-----------------|
 | ![Dashboard](prediction_plot.png) | ![Result](learning_curve.png) |
 
