@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wave Height Prediction System</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>WaveLink 3D | Enterprise Wave Forecasting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
     <style>
         :root {
-            --bg-deep: #020c1b;
-            --bg-navy: #0a192f;
-            --bg-light-navy: #112240;
-            --accent: #64ffda;
-            --text-white: #e6f1ff;
-            --text-slate: #8892b0;
-            --glass: rgba(17, 34, 64, 0.7);
-            --wave-blue: #1e3a8a;
+            --neon-teal: #00f2ff;
+            --deep-ocean: #050a15;
+            --glass-bg: rgba(10, 25, 47, 0.7);
+            --glass-border: rgba(0, 242, 255, 0.2);
+            --text-glow: 0 0 10px rgba(0, 242, 255, 0.5);
         }
 
         * {
@@ -27,417 +24,488 @@
         }
 
         body {
-            background-color: var(--bg-deep);
-            color: var(--text-white);
+            background-color: var(--deep-ocean);
+            color: white;
             overflow-x: hidden;
-            scroll-behavior: smooth;
+            min-height: 100vh;
         }
 
-        /* Hero Section */
-        .hero {
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-navy) 100%);
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .overlay {
             position: relative;
-            text-align: center;
+            z-index: 1;
             padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Navbar & Sound */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(to right, var(--neon-teal), #70ffeb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: var(--text-glow);
+        }
+
+        .sound-toggle {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            color: var(--neon-teal);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .sound-toggle:hover {
+            box-shadow: 0 0 15px var(--neon-teal);
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            margin-bottom: 5rem;
+            opacity: 0;
+            transform: translateY(30px);
         }
 
         .hero h1 {
-            font-size: 4rem;
-            font-weight: 800;
+            font-size: 4.5rem;
+            line-height: 1;
             margin-bottom: 1rem;
-            background: linear-gradient(90deg, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: fadeInUp 1s ease-out;
+            text-transform: uppercase;
         }
 
         .hero p {
             font-size: 1.2rem;
-            color: var(--text-slate);
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 2px;
             max-width: 600px;
-            animation: fadeInUp 1.2s ease-out;
-        }
-
-        .scroll-indicator {
-            position: absolute;
-            bottom: 2rem;
-            animation: bounce 2s infinite;
-        }
-
-        /* Wave Animation Background */
-        .waves {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 15vh;
-            min-height: 100px;
-            max-height: 150px;
-        }
-
-        .parallax > use {
-            animation: move-forever 25s cubic-bezier(.55, .5, .45, .5) infinite;
-        }
-        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
-        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
-        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
-        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
-
-        @keyframes move-forever {
-            0% { transform: translate3d(-90px, 0, 0); }
-            100% { transform: translate3d(85px, 0, 0); }
-        }
-
-        /* Main Content */
-        .container {
-            max-width: 1200px;
             margin: 0 auto;
-            padding: 4rem 2rem;
         }
 
-        .section-title {
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            text-align: center;
-            color: var(--accent);
-        }
-
-        /* Prediction Form */
-        .prediction-card {
-            background: var(--glass);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(100, 255, 218, 0.1);
-            border-radius: 20px;
-            padding: 2rem;
+        /* Main Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
             margin-bottom: 4rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
-        .data-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1rem;
-            max-height: 600px;
-            overflow-y: auto;
-            padding-right: 1rem;
-            margin-bottom: 2rem;
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            transition: transform 0.3s ease;
         }
 
-        .data-grid::-webkit-scrollbar {
-            width: 6px;
-        }
-        .data-grid::-webkit-scrollbar-thumb {
-            background: var(--accent);
-            border-radius: 10px;
+        .glass-card:hover {
+            border-color: var(--neon-teal);
         }
 
-        .row-header {
-            display: grid;
-            grid-template-columns: 80px 1fr 1fr 1fr;
-            gap: 1rem;
-            padding: 0.5rem 1rem;
-            color: var(--accent);
-            font-weight: 600;
-            font-size: 0.9rem;
+        .card-title {
+            font-size: 0.8rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .data-row {
-            display: grid;
-            grid-template-columns: 80px 1fr 1fr 1fr;
-            gap: 1rem;
+            letter-spacing: 3px;
+            color: var(--neon-teal);
+            margin-bottom: 1.5rem;
+            display: flex;
             align-items: center;
-            background: var(--bg-navy);
-            padding: 0.8rem 1rem;
-            border-radius: 10px;
-            transition: transform 0.2s, border-color 0.2s;
-            border: 1px solid transparent;
+            gap: 0.5rem;
         }
 
-        .data-row:hover {
-            transform: translateX(10px);
-            border-color: var(--accent);
+        /* Input Grid */
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
         }
 
-        .row-label {
-            color: var(--text-slate);
-            font-weight: 400;
+        .table-header {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            padding-bottom: 1rem;
+            text-align: left;
+        }
+
+        .input-row {
+            transition: 0.3s;
+        }
+
+        .input-row:hover {
+            background: rgba(0, 242, 255, 0.05);
         }
 
         input {
-            background: var(--bg-light-navy);
-            border: 1px solid #233554;
-            color: var(--text-white);
-            padding: 0.6rem 1rem;
-            border-radius: 5px;
-            outline: none;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 0.6rem;
+            border-radius: 8px;
             width: 100%;
-            transition: border-color 0.3s;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            transition: 0.3s;
         }
 
         input:focus {
-            border-color: var(--accent);
+            outline: none;
+            border-color: var(--neon-teal);
+            background: rgba(255,255,255,1);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.2);
+            color: var(--deep-ocean);
         }
 
-        .controls {
+        /* Result Column */
+        .result-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .prediction-gauge {
+            height: 400px;
+            position: relative;
             display: flex;
             justify-content: center;
-            gap: 1.5rem;
+            align-items: center;
+        }
+
+        #three-gauge-container {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-teal);
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
+            position: relative;
+        }
+
+        .gauge-overlay {
+            position: absolute;
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .gauge-value {
+            font-size: 4rem;
+            font-weight: 800;
+            line-height: 1;
+            text-shadow: 0 0 20px var(--neon-teal);
+        }
+
+        .gauge-unit {
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--neon-teal);
+        }
+
+        /* Controls */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 1rem;
+            margin-top: 2rem;
         }
 
         .btn {
-            padding: 1rem 3rem;
-            font-size: 1.1rem;
-            font-weight: 600;
-            border-radius: 50px;
+            padding: 1.2rem;
+            border-radius: 12px;
+            border: none;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
-            border: 2px solid var(--accent);
-        }
-
-        .btn-predict {
-            background: var(--accent);
-            color: var(--bg-deep);
-        }
-
-        .btn-predict:hover {
-            background: transparent;
-            color: var(--accent);
-            box-shadow: 0 0 20px rgba(100, 255, 218, 0.3);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
         }
 
         .btn-sample {
-            background: transparent;
-            color: var(--accent);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
-        .btn-sample:hover {
-            background: rgba(100, 255, 218, 0.1);
+        .btn-predict {
+            background: var(--neon-teal);
+            color: var(--deep-ocean);
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.4);
         }
 
-        /* Result Section */
-        .result-container {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            margin-top: 3rem;
-            animation: fadeIn 0.8s ease-out;
+        .btn:active {
+            transform: scale(0.95);
         }
 
-        .result-value {
-            font-size: 5rem;
-            font-weight: 800;
-            color: var(--accent);
-            position: relative;
-        }
-
-        .result-unit {
-            font-size: 1.5rem;
-            color: var(--text-slate);
-        }
-
-        /* Liquid Wave Effect for Result */
-        .liquid-container {
-            width: 200px;
-            height: 200px;
-            background: var(--bg-navy);
-            border-radius: 50%;
-            border: 4px solid var(--accent);
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 0 30px rgba(100, 255, 218, 0.2);
-        }
-
-        .liquid-wave {
+        .btn::after {
+            content: '';
             position: absolute;
             top: 50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: var(--accent);
-            opacity: 0.6;
-            border-radius: 40%;
-            animation: rotate-liquid 10s linear infinite;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255,255,255,0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
         }
 
-        @keyframes rotate-liquid {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .btn:focus::after {
+            width: 300%;
+            height: 300%;
+            opacity: 0;
         }
 
-        /* Info Section */
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-            margin-top: 4rem;
-        }
-
-        .info-card {
-            background: var(--bg-light-navy);
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 4px solid var(--accent);
-        }
-
-        .info-card h3 {
-            margin-bottom: 1rem;
-            color: var(--text-white);
-        }
-
-        .info-card p {
-            color: var(--text-slate);
-            line-height: 1.6;
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-            40% {transform: translateY(-10px);}
-            60% {transform: translateY(-5px);}
-        }
-
-        footer {
-            text-align: center;
-            padding: 3rem;
-            color: var(--text-slate);
-            font-size: 0.9rem;
+        @media (max-width: 1000px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 3rem; }
         }
     </style>
 </head>
 <body>
+    <div id="canvas-container"></div>
 
-    <section class="hero">
-        <h1>Wave Height Prediction</h1>
-        <p>Advanced deep learning system utilizing CNN-LSTM networks to forecast oceanic conditions with precision.</p>
-        
-        <div class="scroll-indicator">
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
-        </div>
+    <div class="overlay">
+        <nav>
+            <div class="logo">WAVELINK 3D</div>
+            <button class="sound-toggle" onclick="toggleAudio()" id="audioBtn">🔈 AMBIENT: OFF</button>
+        </nav>
 
-        <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
-            <defs>
-                <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
-            </defs>
-            <g class="parallax">
-                <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(100, 255, 218, 0.7)" />
-                <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(100, 255, 218, 0.5)" />
-                <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(100, 255, 218, 0.3)" />
-                <use xlink:href="#gentle-wave" x="48" y="7" fill="var(--bg-deep)" />
-            </g>
-        </svg>
-    </section>
+        <section class="hero" id="hero">
+            <h1>Forecasting Depth</h1>
+            <p>ADVANCED CNN-LSTM NEURAL MONITORING SYSTEM</p>
+        </section>
 
-    <div class="container" id="prediction">
-        <h2 class="section-title">Analyze Ocean Data</h2>
-
-        <div class="prediction-card">
-            <div class="row-header">
-                <span>Step</span>
-                <span>Wave Height (m)</span>
-                <span>Wind Speed (m/s)</span>
-                <span>Pressure (hPa)</span>
-                <span>Temp (°C)</span>
+        <main class="dashboard-grid">
+            <div class="glass-card" id="input-card">
+                <div class="card-title">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    Input Sequence (10 Steps)
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr class="table-header">
+                            <th width="80">Step</th>
+                            <th>Height (m)</th>
+                            <th>Wind (m/s)</th>
+                            <th>Press (hPa)</th>
+                            <th>Temp (°C)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="input-grid">
+                        <!-- JS generated -->
+                    </tbody>
+                </table>
+                <div class="controls">
+                    <button class="btn btn-sample" onclick="fillSampleData()">Sample</button>
+                    <button class="btn btn-predict" onclick="makePrediction()">Execute Prediction</button>
+                </div>
             </div>
-            <div class="data-grid" id="input-grid">
-                <!-- Inputs will be generated here -->
-            </div>
 
-            <div class="controls">
-                <button class="btn btn-sample" onclick="fillSampleData()">Fill Sample</button>
-                <button class="btn btn-predict" onclick="makePrediction()">Predict Wave Height</button>
+            <div class="result-panel">
+                <div class="glass-card" id="result-card" style="height: 100%;">
+                    <div class="card-title">Live Forecast Projection</div>
+                    <div class="prediction-gauge">
+                        <div id="three-gauge-container"></div>
+                        <div class="gauge-overlay">
+                            <div class="gauge-value" id="prediction-value">--</div>
+                            <div class="gauge-unit">Meters</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-
-        <div class="result-container" id="result-box">
-            <div class="liquid-container">
-                <div class="liquid-wave" id="liquid-wave"></div>
-            </div>
-            <div class="result-value" id="prediction-value">--</div>
-            <div class="result-unit">Meters</div>
-        </div>
-
-        <div class="info-grid">
-            <div class="info-card">
-                <h3>Wave Height</h3>
-                <p>The previous recorded wave height. This provides the temporal context needed for the CNN-LSTM model to forecast the next step.</p>
-            </div>
-            <div class="info-card">
-                <h3>Wind Speed</h3>
-                <p>The speed of wind over the ocean surface. Higher wind speeds typically lead to increased wave formation through energy transfer.</p>
-            </div>
-            <div class="info-card">
-                <h3>Air Pressure</h3>
-                <p>Atmospheric pressure influences the development of storms and wave swells. Rapid changes often indicate incoming weather systems.</p>
-            </div>
-        </div>
-
-        <div class="info-card" style="margin-top: 2rem; width: 100%;">
-            <h3>How to Use</h3>
-            <p>1. Provide a "sliding window" of 10 consecutive time steps of historical data.<br>
-               2. Each step requires the <b>past wave height</b>, wind speed, atmospheric pressure, and temperature.<br>
-               3. Click 'Predict' to run the CNN-LSTM neural network and get the forecasted wave height.</p>
-        </div>
+        </main>
     </div>
 
-    <footer>
-        &copy; 2026 Wave Prediction System | Powered by FastAPI & TensorFlow
-    </footer>
+    <!-- Hidden Audio -->
+    <audio id="oceanSound" loop>
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script id="waterVertexShader" type="x-shader/x-vertex">
+        uniform float time;
+        varying vec2 vUv;
+        varying float vElevation;
+
+        void main() {
+            vUv = uv;
+            vec4 modelPosition = modelMatrix * vec4(position, 1.0);
+            
+            float elevation = sin(modelPosition.x * 2.0 + time) * 0.15
+                            + sin(modelPosition.z * 1.5 + time * 0.8) * 0.15;
+            
+            modelPosition.y += elevation;
+            vElevation = elevation;
+
+            gl_Position = projectionMatrix * viewMatrix * modelPosition;
+        }
+    </script>
+
+    <script id="waterFragmentShader" type="x-shader/x-fragment">
+        uniform vec3 uColor;
+        varying float vElevation;
+        void main() {
+            gl_FragColor = vec4(uColor + vElevation * 0.3, 0.8);
+        }
+    </script>
 
     <script>
-        // Generate inputs
+        // Init Background Three.js
+        let scene, camera, renderer, water;
+        const clock = new THREE.Clock();
+
+        function initBackground() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 3, 7);
+            camera.lookAt(0, 0, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            const geometry = new THREE.PlaneGeometry(30, 30, 128, 128);
+            const material = new THREE.ShaderMaterial({
+                vertexShader: document.getElementById('waterVertexShader').textContent,
+                fragmentShader: document.getElementById('waterFragmentShader').textContent,
+                uniforms: {
+                    time: { value: 0 },
+                    uColor: { value: new THREE.Color(0x00a2ff) }
+                },
+                transparent: true,
+                side: THREE.DoubleSide
+            });
+
+            water = new THREE.Mesh(geometry, material);
+            water.rotation.x = -Math.PI / 2;
+            scene.add(water);
+
+            // Foam Particles
+            const particlesGeometry = new THREE.BufferGeometry();
+            const count = 1500;
+            const positions = new Float32Array(count * 3);
+            for(let i = 0; i < count * 3; i++) {
+                positions[i] = (Math.random() - 0.5) * 30;
+            }
+            particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particlesMaterial = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff, transparent: true, opacity: 0.3 });
+            const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+            scene.add(particles);
+
+            animateBackground();
+        }
+
+        function animateBackground() {
+            requestAnimationFrame(animateBackground);
+            const elapsedTime = clock.getElapsedTime();
+            water.material.uniforms.time.value = elapsedTime;
+            renderer.render(scene, camera);
+        }
+
+        // Init Gauge 3D
+        let gaugeScene, gaugeCamera, gaugeRenderer, liquid;
+        function initGauge() {
+            const container = document.getElementById('three-gauge-container');
+            gaugeScene = new THREE.Scene();
+            gaugeCamera = new THREE.PerspectiveCamera(75, 1, 0.1, 100);
+            gaugeCamera.position.z = 5;
+
+            gaugeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            gaugeRenderer.setSize(300, 300);
+            container.appendChild(gaugeRenderer.domElement);
+
+            const geo = new THREE.CylinderGeometry(2, 2, 6, 32);
+            const mat = new THREE.MeshPhongMaterial({ 
+                color: 0x00f2ff, 
+                transparent: true, 
+                opacity: 0.7,
+                shininess: 100
+            });
+            liquid = new THREE.Mesh(geo, mat);
+            liquid.position.y = -6; // Start empty below view
+            gaugeScene.add(liquid);
+
+            const light = new THREE.PointLight(0xffffff, 2);
+            light.position.set(2, 5, 5);
+            gaugeScene.add(light);
+            gaugeScene.add(new THREE.AmbientLight(0x202020));
+
+            animateGauge();
+        }
+
+        function animateGauge() {
+            requestAnimationFrame(animateGauge);
+            liquid.rotation.y += 0.01;
+            gaugeRenderer.render(gaugeScene, gaugeCamera);
+        }
+
+        function updateGauge(height) {
+            // Map height 0-5m to y position -3 to 3 inside the 6-unit cylinder
+            const targetY = -3 + (Math.min(height, 5) / 5) * 3;
+            gsap.to(liquid.position, { y: targetY, duration: 2.5, ease: "back.out(1.2)" });
+        }
+
+        // Generate Inputs
         const grid = document.getElementById('input-grid');
         for (let i = 1; i <= 10; i++) {
-            const row = document.createElement('div');
-            row.className = 'data-row';
-            row.style.gridTemplateColumns = '80px 1fr 1fr 1fr 1fr';
+            const row = document.createElement('tr');
+            row.className = 'input-row';
             row.innerHTML = `
-                <span class="row-label">T-${11-i}</span>
-                <input type="number" step="0.1" class="height" placeholder="1.5">
-                <input type="number" step="0.1" class="wind" placeholder="0.0">
-                <input type="number" step="0.1" class="pressure" placeholder="1013">
-                <input type="number" step="0.1" class="temp" placeholder="20.0">
+                <td style="color:var(--neon-teal); font-family:'JetBrains Mono'; font-size:0.8rem">T-${11-i}</td>
+                <td><input type="number" step="0.1" class="height" placeholder="1.5"></td>
+                <td><input type="number" step="0.1" class="wind" placeholder="0.0"></td>
+                <td><input type="number" step="0.1" class="pressure" placeholder="1013"></td>
+                <td><input type="number" step="0.1" class="temp" placeholder="20.0"></td>
             `;
             grid.appendChild(row);
         }
-        
-        // Update row header grid too
-        document.querySelector('.row-header').style.gridTemplateColumns = '80px 1fr 1fr 1fr 1fr';
 
+        // Logic
         async function makePrediction() {
             const heightInputs = document.querySelectorAll('.height');
             const windInputs = document.querySelectorAll('.wind');
             const pressureInputs = document.querySelectorAll('.pressure');
             const tempInputs = document.querySelectorAll('.temp');
-            const resultBox = document.getElementById('result-box');
             const valueDisplay = document.getElementById('prediction-value');
-            const liquid = document.getElementById('liquid-wave');
 
             const data = [];
             for (let i = 0; i < 10; i++) {
-                const h = parseFloat(heightInputs[i].value) || 0;
-                const wind = parseFloat(windInputs[i].value) || 0;
-                const pressure = parseFloat(pressureInputs[i].value) || 1013;
-                const temp = parseFloat(tempInputs[i].value) || 20;
-                data.push([h, wind, pressure, temp]);
+                data.push([
+                    parseFloat(heightInputs[i].value) || 0,
+                    parseFloat(windInputs[i].value) || 0,
+                    parseFloat(pressureInputs[i].value) || 1013,
+                    parseFloat(tempInputs[i].value) || 20
+                ]);
             }
 
-            resultBox.style.display = 'flex';
             valueDisplay.innerText = "...";
             
             try {
@@ -448,19 +516,25 @@
                 });
                 
                 const result = await response.json();
-                
                 if (response.ok) {
                     const height = result.predicted_wave_height_meters;
-                    valueDisplay.innerText = height.toFixed(2);
                     
-                    const percentage = Math.min(100, (height / 5) * 100);
-                    liquid.style.top = `${100 - percentage}%`;
+                    // Animate text count
+                    const currentVal = { val: parseFloat(valueDisplay.innerText) || 0 };
+                    gsap.to(currentVal, {
+                        val: height,
+                        duration: 2,
+                        onUpdate: () => {
+                            valueDisplay.innerText = currentVal.val.toFixed(2);
+                        }
+                    });
+                    
+                    updateGauge(height);
                 } else {
-                    alert("Error: " + result.detail);
+                    alert("Analysis Error: " + result.detail);
                 }
             } catch (error) {
-                console.error(error);
-                alert("Failed to connect to the prediction server.");
+                alert("Core Link Failure");
             }
         }
 
@@ -471,19 +545,54 @@
                 [1.55, 6.9, 1014.6, 15.1], [1.54, 6.6, 1014.7, 15.1], [1.52, 7.0, 1014.8, 15.1], 
                 [1.51, 7.0, 1014.9, 15.1]
             ];
-            
-            const heightInputs = document.querySelectorAll('.height');
-            const windInputs = document.querySelectorAll('.wind');
-            const pressureInputs = document.querySelectorAll('.pressure');
-            const tempInputs = document.querySelectorAll('.temp');
-
+            const inputs = [
+                document.querySelectorAll('.height'), 
+                document.querySelectorAll('.wind'), 
+                document.querySelectorAll('.pressure'), 
+                document.querySelectorAll('.temp')
+            ];
             sample.forEach((vals, i) => {
-                heightInputs[i].value = vals[0];
-                windInputs[i].value = vals[1];
-                pressureInputs[i].value = vals[2];
-                tempInputs[i].value = vals[3];
+                vals.forEach((v, j) => {
+                    inputs[j][i].value = v;
+                    gsap.from(inputs[j][i], { background: "rgba(0, 242, 255, 0.3)", duration: 0.5 });
+                });
             });
         }
+
+        function toggleAudio() {
+            const audio = document.getElementById('oceanSound');
+            const btn = document.getElementById('audioBtn');
+            if (audio.paused) {
+                audio.play();
+                btn.innerText = "🔊 AMBIENT: ON";
+            } else {
+                audio.pause();
+                btn.innerText = "🔈 AMBIENT: OFF";
+            }
+        }
+
+        // Initialize All
+        window.addEventListener('DOMContentLoaded', () => {
+            initBackground();
+            initGauge();
+            
+            // Initial Animations
+            gsap.to('#hero', { opacity: 1, y: 0, duration: 1.5, ease: "power4.out" });
+            gsap.from('.glass-card', { 
+                opacity: 0, 
+                y: 50, 
+                duration: 1.2, 
+                stagger: 0.3, 
+                ease: "power3.out",
+                delay: 0.5 
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
     </script>
 </body>
 </html>
