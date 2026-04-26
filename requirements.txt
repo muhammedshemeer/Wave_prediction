@@ -1,6 +1,5 @@
+fastapi
+uvicorn
 tensorflow
-pandas
-numpy
-matplotlib
 scikit-learn
-requests
+numpy

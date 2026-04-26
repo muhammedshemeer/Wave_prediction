@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Height Prediction System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #020c1b;
+            --bg-navy: #0a192f;
+            --bg-light-navy: #112240;
+            --accent: #64ffda;
+            --text-white: #e6f1ff;
+            --text-slate: #8892b0;
+            --glass: rgba(17, 34, 64, 0.7);
+            --wave-blue: #1e3a8a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-white);
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-navy) 100%);
+            position: relative;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-slate);
+            max-width: 600px;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        .scroll-indicator {
+            position: absolute;
+            bottom: 2rem;
+            animation: bounce 2s infinite;
+        }
+
+        /* Wave Animation Background */
+        .waves {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 15vh;
+            min-height: 100px;
+            max-height: 150px;
+        }
+
+        .parallax > use {
+            animation: move-forever 25s cubic-bezier(.55, .5, .45, .5) infinite;
+        }
+        .parallax > use:nth-child(1) { animation-delay: -2s; animation-duration: 7s; }
+        .parallax > use:nth-child(2) { animation-delay: -3s; animation-duration: 10s; }
+        .parallax > use:nth-child(3) { animation-delay: -4s; animation-duration: 13s; }
+        .parallax > use:nth-child(4) { animation-delay: -5s; animation-duration: 20s; }
+
+        @keyframes move-forever {
+            0% { transform: translate3d(-90px, 0, 0); }
+            100% { transform: translate3d(85px, 0, 0); }
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        /* Prediction Form */
+        .prediction-card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 255, 218, 0.1);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 4rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .data-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+        .data-grid::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+
+        .row-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr 1fr;
+            gap: 1rem;
+            padding: 0.5rem 1rem;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 1fr 1fr;
+            gap: 1rem;
+            align-items: center;
+            background: var(--bg-navy);
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            transition: transform 0.2s, border-color 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .data-row:hover {
+            transform: translateX(10px);
+            border-color: var(--accent);
+        }
+
+        .row-label {
+            color: var(--text-slate);
+            font-weight: 400;
+        }
+
+        input {
+            background: var(--bg-light-navy);
+            border: 1px solid #233554;
+            color: var(--text-white);
+            padding: 0.6rem 1rem;
+            border-radius: 5px;
+            outline: none;
+            width: 100%;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .btn {
+            padding: 1rem 3rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+            border: 2px solid var(--accent);
+        }
+
+        .btn-predict {
+            background: var(--accent);
+            color: var(--bg-deep);
+        }
+
+        .btn-predict:hover {
+            background: transparent;
+            color: var(--accent);
+            box-shadow: 0 0 20px rgba(100, 255, 218, 0.3);
+        }
+
+        .btn-sample {
+            background: transparent;
+            color: var(--accent);
+        }
+
+        .btn-sample:hover {
+            background: rgba(100, 255, 218, 0.1);
+        }
+
+        /* Result Section */
+        .result-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 3rem;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .result-value {
+            font-size: 5rem;
+            font-weight: 800;
+            color: var(--accent);
+            position: relative;
+        }
+
+        .result-unit {
+            font-size: 1.5rem;
+            color: var(--text-slate);
+        }
+
+        /* Liquid Wave Effect for Result */
+        .liquid-container {
+            width: 200px;
+            height: 200px;
+            background: var(--bg-navy);
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 30px rgba(100, 255, 218, 0.2);
+        }
+
+        .liquid-wave {
+            position: absolute;
+            top: 50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: var(--accent);
+            opacity: 0.6;
+            border-radius: 40%;
+            animation: rotate-liquid 10s linear infinite;
+        }
+
+        @keyframes rotate-liquid {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Info Section */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 4rem;
+        }
+
+        .info-card {
+            background: var(--bg-light-navy);
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .info-card h3 {
+            margin-bottom: 1rem;
+            color: var(--text-white);
+        }
+
+        .info-card p {
+            color: var(--text-slate);
+            line-height: 1.6;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-10px);}
+            60% {transform: translateY(-5px);}
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-slate);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <section class="hero">
+        <h1>Wave Height Prediction</h1>
+        <p>Advanced deep learning system utilizing CNN-LSTM networks to forecast oceanic conditions with precision.</p>
+        
+        <div class="scroll-indicator">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>
+        </div>
+
+        <svg class="waves" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 24 150 28" preserveAspectRatio="none" shape-rendering="auto">
+            <defs>
+                <path id="gentle-wave" d="M-160 44c30 0 58-18 88-18s 58 18 88 18 58-18 88-18 58 18 88 18 v44h-352z" />
+            </defs>
+            <g class="parallax">
+                <use xlink:href="#gentle-wave" x="48" y="0" fill="rgba(100, 255, 218, 0.7)" />
+                <use xlink:href="#gentle-wave" x="48" y="3" fill="rgba(100, 255, 218, 0.5)" />
+                <use xlink:href="#gentle-wave" x="48" y="5" fill="rgba(100, 255, 218, 0.3)" />
+                <use xlink:href="#gentle-wave" x="48" y="7" fill="var(--bg-deep)" />
+            </g>
+        </svg>
+    </section>
+
+    <div class="container" id="prediction">
+        <h2 class="section-title">Analyze Ocean Data</h2>
+
+        <div class="prediction-card">
+            <div class="row-header">
+                <span>Step</span>
+                <span>Wave Height (m)</span>
+                <span>Wind Speed (m/s)</span>
+                <span>Pressure (hPa)</span>
+                <span>Temp (°C)</span>
+            </div>
+            <div class="data-grid" id="input-grid">
+                <!-- Inputs will be generated here -->
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-sample" onclick="fillSampleData()">Fill Sample</button>
+                <button class="btn btn-predict" onclick="makePrediction()">Predict Wave Height</button>
+            </div>
+        </div>
+
+        <div class="result-container" id="result-box">
+            <div class="liquid-container">
+                <div class="liquid-wave" id="liquid-wave"></div>
+            </div>
+            <div class="result-value" id="prediction-value">--</div>
+            <div class="result-unit">Meters</div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <h3>Wave Height</h3>
+                <p>The previous recorded wave height. This provides the temporal context needed for the CNN-LSTM model to forecast the next step.</p>
+            </div>
+            <div class="info-card">
+                <h3>Wind Speed</h3>
+                <p>The speed of wind over the ocean surface. Higher wind speeds typically lead to increased wave formation through energy transfer.</p>
+            </div>
+            <div class="info-card">
+                <h3>Air Pressure</h3>
+                <p>Atmospheric pressure influences the development of storms and wave swells. Rapid changes often indicate incoming weather systems.</p>
+            </div>
+        </div>
+
+        <div class="info-card" style="margin-top: 2rem; width: 100%;">
+            <h3>How to Use</h3>
+            <p>1. Provide a "sliding window" of 10 consecutive time steps of historical data.<br>
+               2. Each step requires the <b>past wave height</b>, wind speed, atmospheric pressure, and temperature.<br>
+               3. Click 'Predict' to run the CNN-LSTM neural network and get the forecasted wave height.</p>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 Wave Prediction System | Powered by FastAPI & TensorFlow
+    </footer>
+
+    <script>
+        // Generate inputs
+        const grid = document.getElementById('input-grid');
+        for (let i = 1; i <= 10; i++) {
+            const row = document.createElement('div');
+            row.className = 'data-row';
+            row.style.gridTemplateColumns = '80px 1fr 1fr 1fr 1fr';
+            row.innerHTML = `
+                <span class="row-label">T-${11-i}</span>
+                <input type="number" step="0.1" class="height" placeholder="1.5">
+                <input type="number" step="0.1" class="wind" placeholder="0.0">
+                <input type="number" step="0.1" class="pressure" placeholder="1013">
+                <input type="number" step="0.1" class="temp" placeholder="20.0">
+            `;
+            grid.appendChild(row);
+        }
+        
+        // Update row header grid too
+        document.querySelector('.row-header').style.gridTemplateColumns = '80px 1fr 1fr 1fr 1fr';
+
+        async function makePrediction() {
+            const heightInputs = document.querySelectorAll('.height');
+            const windInputs = document.querySelectorAll('.wind');
+            const pressureInputs = document.querySelectorAll('.pressure');
+            const tempInputs = document.querySelectorAll('.temp');
+            const resultBox = document.getElementById('result-box');
+            const valueDisplay = document.getElementById('prediction-value');
+            const liquid = document.getElementById('liquid-wave');
+
+            const data = [];
+            for (let i = 0; i < 10; i++) {
+                const h = parseFloat(heightInputs[i].value) || 0;
+                const wind = parseFloat(windInputs[i].value) || 0;
+                const pressure = parseFloat(pressureInputs[i].value) || 1013;
+                const temp = parseFloat(tempInputs[i].value) || 20;
+                data.push([h, wind, pressure, temp]);
+            }
+
+            resultBox.style.display = 'flex';
+            valueDisplay.innerText = "...";
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ data: data })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const height = result.predicted_wave_height_meters;
+                    valueDisplay.innerText = height.toFixed(2);
+                    
+                    const percentage = Math.min(100, (height / 5) * 100);
+                    liquid.style.top = `${100 - percentage}%`;
+                } else {
+                    alert("Error: " + result.detail);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Failed to connect to the prediction server.");
+            }
+        }
+
+        function fillSampleData() {
+            const sample = [
+                [1.58, 6.1, 1014.1, 15.1], [1.58, 6.5, 1014.2, 15.1], [1.58, 6.7, 1014.3, 15.1], 
+                [1.58, 6.7, 1014.3, 15.1], [1.58, 6.8, 1014.4, 15.1], [1.56, 6.8, 1014.6, 15.1], 
+                [1.55, 6.9, 1014.6, 15.1], [1.54, 6.6, 1014.7, 15.1], [1.52, 7.0, 1014.8, 15.1], 
+                [1.51, 7.0, 1014.9, 15.1]
+            ];
+            
+            const heightInputs = document.querySelectorAll('.height');
+            const windInputs = document.querySelectorAll('.wind');
+            const pressureInputs = document.querySelectorAll('.pressure');
+            const tempInputs = document.querySelectorAll('.temp');
+
+            sample.forEach((vals, i) => {
+                heightInputs[i].value = vals[0];
+                windInputs[i].value = vals[1];
+                pressureInputs[i].value = vals[2];
+                tempInputs[i].value = vals[3];
+            });
+        }
+    </script>
+</body>
+</html>
