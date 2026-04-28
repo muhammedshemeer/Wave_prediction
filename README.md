@@ -2,7 +2,7 @@
 title: WaveCast Wave Height Prediction
 emoji: 🌊
 colorFrom: blue
-colorTo: cyan
+colorTo: blue
 sdk: docker
 pinned: true
 ---
