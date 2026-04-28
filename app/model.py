@@ -1,16 +1,14 @@
 import os
-os.environ['TF_USE_LEGACY_KERAS'] = '1'
-
 import pickle
 import numpy as np
-import tensorflow as tf
+import tf_keras as keras
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class WavePredictionModel:
     def __init__(self, model_path, feature_scaler_path, target_scaler_path):
-        # Using tf.keras with legacy flag set
-        self.model = tf.keras.models.load_model(model_path, compile=False)
+        # Using tf_keras directly to guarantee Keras 2 engine
+        self.model = keras.models.load_model(model_path, compile=False)
         
         with open(feature_scaler_path, 'rb') as f:
             self.feature_scaler = pickle.load(f)
