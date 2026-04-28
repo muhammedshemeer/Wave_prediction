@@ -1,3 +1,12 @@
+---
+title: WaveCast Wave Height Prediction
+emoji: 🌊
+colorFrom: blue
+colorTo: cyan
+sdk: docker
+pinned: true
+---
+
 # 🌊 Underwater Wave Prediction System
 
 This project utilizes a CNN-LSTM deep learning model to predict underwater wave heights using meteorological data (Wind Speed, Pressure, and Temperature) from NOAA buoys.
@@ -224,8 +233,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY . .
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 7860
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
 ```
 
 ---
