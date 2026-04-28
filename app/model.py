@@ -7,7 +7,6 @@ import asyncio
 
 # Minimize TF logs
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,28 +21,25 @@ class WavePredictionModel:
     async def load_background(self):
         """Load the model in a separate thread so it doesn't block the API."""
         try:
-            logger.info("Starting background model load...")
-            # Use to_thread to keep the main event loop responsive
+            logger.info("Starting background model load (TF 2.12.0 mode)...")
             await asyncio.to_thread(self._sync_load)
             self.is_ready = True
-            logger.info("✅ Background load complete. Model is READY.")
+            logger.info("✅ Model loaded successfully on native Keras 2 engine!")
             return True
         except Exception as e:
             logger.error(f"❌ Background load failed: {str(e)}")
             return False
 
     def _sync_load(self):
-        """The actual blocking load logic."""
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         model_path = os.path.join(base_dir, 'models', 'wave_prediction_model.h5')
         f_scaler_path = os.path.join(base_dir, 'models', 'feature_scaler.pkl')
         t_scaler_path = os.path.join(base_dir, 'models', 'target_scaler.pkl')
 
-        # Check for LFS pointers
         if os.path.exists(model_path) and os.path.getsize(model_path) < 1000:
             raise OSError("Model file is an LFS pointer, not a binary.")
 
-        # Load using tf.keras (Keras 2 legacy)
+        # In TF 2.12, this uses the original Keras 2 engine
         self.model = tf.keras.models.load_model(model_path, compile=False)
         
         with open(f_scaler_path, 'rb') as f:
@@ -53,7 +49,7 @@ class WavePredictionModel:
 
     def predict(self, input_data):
         if not self.is_ready:
-            raise RuntimeError("Model is still loading in the background. Please wait.")
+            raise RuntimeError("Model is still loading. Please wait.")
         
         data = np.array(input_data)
         scaled_data = self.feature_scaler.transform(data)
@@ -64,5 +60,4 @@ class WavePredictionModel:
         
         return float(prediction[0][0])
 
-# Global instance
 wave_predictor = WavePredictionModel()
