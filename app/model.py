@@ -2,13 +2,12 @@ import os
 import pickle
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import load_model
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class WavePredictionModel:
     def __init__(self, model_path, feature_scaler_path, target_scaler_path):
-        self.model = load_model(model_path, compile=False)
+        self.model = tf.keras.models.load_model(model_path, compile=False)
         
         with open(feature_scaler_path, 'rb') as f:
             self.feature_scaler = pickle.load(f)
@@ -44,7 +43,7 @@ class WavePredictionModel:
 # Initialize the model instance
 # Paths relative to the root of the project
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, 'models', 'wave_prediction_model.h5')
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'wave_prediction_model.keras')
 FEATURE_SCALER_PATH = os.path.join(BASE_DIR, 'models', 'feature_scaler.pkl')
 TARGET_SCALER_PATH = os.path.join(BASE_DIR, 'models', 'target_scaler.pkl')
 
