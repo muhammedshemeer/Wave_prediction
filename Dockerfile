@@ -4,9 +4,6 @@ FROM python:3.10-slim
 # Set working directory
 WORKDIR /app
 
-# Force legacy Keras for model compatibility
-ENV TF_USE_LEGACY_KERAS=1
-
 # Install system dependencies if needed (e.g., for some ML libs)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \

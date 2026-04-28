@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 from typing import List
-from app.predictor import wave_model
+from app.model import wave_model
 import os
 
 from fastapi.middleware.cors import CORSMiddleware
