@@ -1,12 +1,11 @@
 import os
 import pickle
 import numpy as np
-import tensorflow as tf
-from tensorflow.keras.models import load_model
+import tf_keras as keras
 
 class WavePredictionModel:
     def __init__(self, model_path, feature_scaler_path, target_scaler_path):
-        self.model = load_model(model_path, compile=False)
+        self.model = keras.models.load_model(model_path, compile=False)
         
         with open(feature_scaler_path, 'rb') as f:
             self.feature_scaler = pickle.load(f)

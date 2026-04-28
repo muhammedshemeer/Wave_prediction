@@ -13,7 +13,7 @@ export interface PredictResponse {
 
 const API_KEY = "wavecast.api_base_url";
 
-export const getApiBase = () => localStorage.getItem(API_KEY) ?? "http://localhost:8000";
+export const getApiBase = () => localStorage.getItem(API_KEY) ?? "https://alert-emotion-production-ffa4.up.railway.app";
 export const setApiBase = (url: string) => localStorage.setItem(API_KEY, url.replace(/\/+$/, ""));
 
 const join = (base: string, path: string) => `${base.replace(/\/+$/, "")}${path}`;

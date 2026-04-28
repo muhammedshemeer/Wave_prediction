@@ -3,10 +3,20 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 from typing import List
-from app.model import wave_model
+from app.predictor import wave_model
 import os
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI(title="Wave Height Prediction API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Get path to static directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
