@@ -4,10 +4,11 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 from typing import List
 import os
+import asyncio
 from app.model import wave_predictor
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="WaveCast Production API")
+app = FastAPI(title="WaveCast Instant-Start API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,6 +17,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Startup event to trigger background loading
+@app.on_event("startup")
+async def startup_event():
+    # Start the background task without waiting (non-blocking)
+    asyncio.create_task(wave_predictor.load_background())
 
 # Get path to static directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -32,31 +39,33 @@ class PredictionRequest(BaseModel):
     def validate_data_shape(cls, v):
         if len(v) != 10:
             raise ValueError('Data must contain exactly 10 time steps.')
-        for step in v:
-            if len(step) != 4:
-                raise ValueError('Each time step must contain exactly 4 features.')
         return v
 
 @app.get("/")
 async def root():
+    # This will respond INSTANTLY, passing the Railway health check
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
 @app.get("/health")
 async def health():
-    """Health check returns model status without crashing."""
-    status = "ready" if wave_predictor.is_ready else "loading/error"
-    return {"status": "online", "model_state": status}
+    return {
+        "status": "online", 
+        "model_loaded": wave_predictor.is_ready
+    }
 
 @app.post("/predict")
 async def predict(request: PredictionRequest):
+    if not wave_predictor.is_ready:
+        raise HTTPException(status_code=503, detail="Model is still warming up in the background. Please try again in 10-20 seconds.")
+    
     try:
-        # Prediction triggers the lazy load if needed
         prediction = wave_predictor.predict(request.data)
         return {"predicted_wave_height_meters": round(prediction, 2)}
     except Exception as e:
-        # Return 503 Service Unavailable if the model isn't ready
-        raise HTTPException(status_code=503, detail=f"Prediction failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Important: Always bind to 0.0.0.0 and use $PORT for cloud deployment
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 import tensorflow as tf
 import logging
+import asyncio
 
 # Minimize TF logs
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -18,42 +19,41 @@ class WavePredictionModel:
         self.target_scaler = None
         self.is_ready = False
 
-    def load(self):
-        """Lazy load the model and scalers to prevent startup crashes."""
-        if self.is_ready:
-            return True
-            
+    async def load_background(self):
+        """Load the model in a separate thread so it doesn't block the API."""
         try:
-            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            model_path = os.path.join(base_dir, 'models', 'wave_prediction_model.h5')
-            f_scaler_path = os.path.join(base_dir, 'models', 'feature_scaler.pkl')
-            t_scaler_path = os.path.join(base_dir, 'models', 'target_scaler.pkl')
-
-            # Verification check for Git LFS pointers
-            if os.path.exists(model_path) and os.path.getsize(model_path) < 1000:
-                logger.error("Model file is an LFS pointer, not a binary.")
-                return False
-
-            logger.info("Loading TensorFlow model (Lazy Load)...")
-            # Force Keras 2 engine via tf.keras with legacy flag
-            self.model = tf.keras.models.load_model(model_path, compile=False)
-            
-            with open(f_scaler_path, 'rb') as f:
-                self.feature_scaler = pickle.load(f)
-            with open(t_scaler_path, 'rb') as f:
-                self.target_scaler = pickle.load(f)
-                
+            logger.info("Starting background model load...")
+            # Use to_thread to keep the main event loop responsive
+            await asyncio.to_thread(self._sync_load)
             self.is_ready = True
-            logger.info("Model loaded successfully!")
+            logger.info("✅ Background load complete. Model is READY.")
             return True
         except Exception as e:
-            logger.error(f"Failed to load model: {str(e)}")
+            logger.error(f"❌ Background load failed: {str(e)}")
             return False
+
+    def _sync_load(self):
+        """The actual blocking load logic."""
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        model_path = os.path.join(base_dir, 'models', 'wave_prediction_model.h5')
+        f_scaler_path = os.path.join(base_dir, 'models', 'feature_scaler.pkl')
+        t_scaler_path = os.path.join(base_dir, 'models', 'target_scaler.pkl')
+
+        # Check for LFS pointers
+        if os.path.exists(model_path) and os.path.getsize(model_path) < 1000:
+            raise OSError("Model file is an LFS pointer, not a binary.")
+
+        # Load using tf.keras (Keras 2 legacy)
+        self.model = tf.keras.models.load_model(model_path, compile=False)
+        
+        with open(f_scaler_path, 'rb') as f:
+            self.feature_scaler = pickle.load(f)
+        with open(t_scaler_path, 'rb') as f:
+            self.target_scaler = pickle.load(f)
 
     def predict(self, input_data):
         if not self.is_ready:
-            if not self.load():
-                raise RuntimeError("Model is not loaded and failed to initialize.")
+            raise RuntimeError("Model is still loading in the background. Please wait.")
         
         data = np.array(input_data)
         scaled_data = self.feature_scaler.transform(data)
@@ -64,5 +64,5 @@ class WavePredictionModel:
         
         return float(prediction[0][0])
 
-# Global instance (Doesn't load yet)
+# Global instance
 wave_predictor = WavePredictionModel()
