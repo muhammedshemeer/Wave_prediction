@@ -9,6 +9,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class WavePredictionModel:
     def __init__(self, model_path, feature_scaler_path, target_scaler_path):
+        # Using tf.keras with legacy flag set
         self.model = tf.keras.models.load_model(model_path, compile=False)
         
         with open(feature_scaler_path, 'rb') as f:
@@ -45,7 +46,7 @@ class WavePredictionModel:
 # Initialize the model instance
 # Paths relative to the root of the project
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, 'models', 'wave_prediction_model.keras')
+MODEL_PATH = os.path.join(BASE_DIR, 'models', 'wave_prediction_model.h5')
 FEATURE_SCALER_PATH = os.path.join(BASE_DIR, 'models', 'feature_scaler.pkl')
 TARGET_SCALER_PATH = os.path.join(BASE_DIR, 'models', 'target_scaler.pkl')
 
