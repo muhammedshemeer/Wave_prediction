@@ -3,12 +3,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, field_validator
 from typing import List
-from app.model import wave_model
 import os
-
+from app.model import wave_predictor
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="Wave Height Prediction API")
+app = FastAPI(title="WaveCast Production API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,7 +34,7 @@ class PredictionRequest(BaseModel):
             raise ValueError('Data must contain exactly 10 time steps.')
         for step in v:
             if len(step) != 4:
-                raise ValueError('Each time step must contain exactly 4 features [wave_height, wind_speed, pressure, temperature].')
+                raise ValueError('Each time step must contain exactly 4 features.')
         return v
 
 @app.get("/")
@@ -44,15 +43,19 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy"}
+    """Health check returns model status without crashing."""
+    status = "ready" if wave_predictor.is_ready else "loading/error"
+    return {"status": "online", "model_state": status}
 
 @app.post("/predict")
 async def predict(request: PredictionRequest):
     try:
-        prediction = wave_model.predict(request.data)
+        # Prediction triggers the lazy load if needed
+        prediction = wave_predictor.predict(request.data)
         return {"predicted_wave_height_meters": round(prediction, 2)}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Return 503 Service Unavailable if the model isn't ready
+        raise HTTPException(status_code=503, detail=f"Prediction failed: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

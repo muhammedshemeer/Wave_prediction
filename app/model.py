@@ -2,50 +2,67 @@ import os
 import pickle
 import numpy as np
 import tensorflow as tf
+import logging
 
+# Minimize TF logs
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_USE_LEGACY_KERAS'] = '1'
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 class WavePredictionModel:
-    def __init__(self, model_path, feature_scaler_path, target_scaler_path):
-        # In TF 2.12, this uses Keras 2 natively
-        self.model = tf.keras.models.load_model(model_path, compile=False)
-        
-        with open(feature_scaler_path, 'rb') as f:
-            self.feature_scaler = pickle.load(f)
+    def __init__(self):
+        self.model = None
+        self.feature_scaler = None
+        self.target_scaler = None
+        self.is_ready = False
+
+    def load(self):
+        """Lazy load the model and scalers to prevent startup crashes."""
+        if self.is_ready:
+            return True
             
-        with open(target_scaler_path, 'rb') as f:
-            self.target_scaler = pickle.load(f)
+        try:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            model_path = os.path.join(base_dir, 'models', 'wave_prediction_model.h5')
+            f_scaler_path = os.path.join(base_dir, 'models', 'feature_scaler.pkl')
+            t_scaler_path = os.path.join(base_dir, 'models', 'target_scaler.pkl')
+
+            # Verification check for Git LFS pointers
+            if os.path.exists(model_path) and os.path.getsize(model_path) < 1000:
+                logger.error("Model file is an LFS pointer, not a binary.")
+                return False
+
+            logger.info("Loading TensorFlow model (Lazy Load)...")
+            # Force Keras 2 engine via tf.keras with legacy flag
+            self.model = tf.keras.models.load_model(model_path, compile=False)
+            
+            with open(f_scaler_path, 'rb') as f:
+                self.feature_scaler = pickle.load(f)
+            with open(t_scaler_path, 'rb') as f:
+                self.target_scaler = pickle.load(f)
+                
+            self.is_ready = True
+            logger.info("Model loaded successfully!")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to load model: {str(e)}")
+            return False
 
     def predict(self, input_data):
-        """
-        input_data: list of 10 time steps, each [wind_speed, pressure, temperature]
-        """
-        # Convert to numpy array
+        if not self.is_ready:
+            if not self.load():
+                raise RuntimeError("Model is not loaded and failed to initialize.")
+        
         data = np.array(input_data)
-        
-        # Scale the input features
-        # Note: Scaler expects 2D array for fit/transform, but our input is (10, 3)
-        # We transform all 10 steps at once
         scaled_data = self.feature_scaler.transform(data)
-        
-        # Reshape for CNN-LSTM: (samples, time_steps, features)
-        # Here samples=1, time_steps=10, features=4
         reshaped_data = scaled_data.reshape(1, 10, 4)
         
-        # Predict
         prediction_scaled = self.model.predict(reshaped_data, verbose=0)
-        
-        # Inverse transform the prediction
-        # Target scaler was fit on wave_height only (1D)
         prediction = self.target_scaler.inverse_transform(prediction_scaled)
         
         return float(prediction[0][0])
 
-# Initialize the model instance
-# Paths relative to the root of the project
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-MODEL_PATH = os.path.join(BASE_DIR, 'models', 'wave_prediction_model.h5')
-FEATURE_SCALER_PATH = os.path.join(BASE_DIR, 'models', 'feature_scaler.pkl')
-TARGET_SCALER_PATH = os.path.join(BASE_DIR, 'models', 'target_scaler.pkl')
-
-wave_model = WavePredictionModel(MODEL_PATH, FEATURE_SCALER_PATH, TARGET_SCALER_PATH)
+# Global instance (Doesn't load yet)
+wave_predictor = WavePredictionModel()
