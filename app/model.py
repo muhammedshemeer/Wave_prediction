@@ -1,14 +1,14 @@
 import os
 import pickle
 import numpy as np
-import tf_keras as keras
+import tensorflow as tf
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 class WavePredictionModel:
     def __init__(self, model_path, feature_scaler_path, target_scaler_path):
-        # Using tf_keras directly to guarantee Keras 2 engine
-        self.model = keras.models.load_model(model_path, compile=False)
+        # In TF 2.12, this uses Keras 2 natively
+        self.model = tf.keras.models.load_model(model_path, compile=False)
         
         with open(feature_scaler_path, 'rb') as f:
             self.feature_scaler = pickle.load(f)
