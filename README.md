@@ -20,7 +20,7 @@ This project utilizes a CNN-LSTM deep learning model to predict underwater wave 
 
 **A production-grade deep learning system that predicts underwater wave heights using a hybrid CNN-LSTM neural network, served via a REST API with a beautiful interactive dashboard.**
 
-[Live Demo](#) · [API Docs](http://127.0.0.1:8000/docs) · [Report Bug](#) · [LinkedIn](https://linkedin.com/in/mohammed-shemeer-aiml)
+[Live Demo](https://alert-emotion-production-ffa4.up.railway.app) · [API Docs](https://alert-emotion-production-ffa4.up.railway.app/docs) · [Report Bug](https://github.com/muhammedshemeer/Wave_prediction/issues) · [LinkedIn](https://linkedin.com/in/mohammed-shemeer-aiml)
 
 </div>
 
